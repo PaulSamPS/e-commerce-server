@@ -13,4 +13,7 @@ export class UsersModel extends Model<UsersModel> {
 
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   activated: boolean;
+
+  @Column({ type: DataType.BOOLEAN, defaultValue: false })
+  isAdmin: boolean;
 }

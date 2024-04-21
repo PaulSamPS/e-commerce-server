@@ -5,6 +5,11 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { UsersModule } from '@/modules/users';
 import { CodeModule } from '@/modules/code/code.module';
 import { TokenModule } from '@/modules/token';
+import { MulterModule } from '@nestjs/platform-express';
+import { ReviewModule } from '@/modules/review/review.module';
+import { FeaturesModule } from '@/modules/features/features.module';
+import { ProductModule } from '@/modules/product';
+import { FilesModule } from '@/modules/files';
 
 /**
  * Модуль приложения, который объединяет все остальные модули и провайдеры.
@@ -31,6 +36,11 @@ import { TokenModule } from '@/modules/token';
 
     // Подключение модуля токенов
     TokenModule,
+    ReviewModule,
+    FeaturesModule,
+    ProductModule,
+    FilesModule,
+    MulterModule.register({ dest: './uploads ' }),
   ],
 })
 export class AppModule {}

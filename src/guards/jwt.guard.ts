@@ -5,10 +5,10 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import {JwtService} from '@nestjs/jwt';
-import {ConfigService} from '@nestjs/config';
-import {Request, Response} from 'express';
-import {JwtTokenService} from '@/modules/token';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { Request, Response } from 'express';
+import { JwtTokenService } from '@/modules/token';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -38,11 +38,11 @@ export class JwtAuthGuard implements CanActivate {
     try {
       // Проверка access токена
       await this.verifyAccessToken(access);
-      return true
+      return true;
     } catch {
       // Обновление токенов, если access токен невалиден
       await this.refreshTokenIfNeeded(response, refresh);
-      return  true
+      return true;
     }
   }
 
@@ -63,10 +63,7 @@ export class JwtAuthGuard implements CanActivate {
    * @param refreshToken Refresh токен.
    * @throws UnauthorizedException если refresh токен отсутствует или недействителен.
    */
-  private async refreshTokenIfNeeded(
-    response: Response,
-    refreshToken: string,
-  ) {
+  private async refreshTokenIfNeeded(response: Response, refreshToken: string) {
     if (!refreshToken) {
       throw new UnauthorizedException(
         'Истек срок действия токена и отсутствует refresh токен.',

@@ -39,11 +39,19 @@ export class JwtTokenService {
   async refreshTokens(
     refreshToken: string,
   ): Promise<{ accessToken: string; newRefreshToken: string }> {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Не автоизован и нет refresh токена');
+    }
+    console.log(refreshToken, 'refresh');
     // Проверяем валидность токена обновления и извлекаем пользователя из него
     const { user } = this.verifyToken(refreshToken, 'refresh');
 
     // Поиск токена в базе данных для пользователя
     const dbToken = await this.tokenService.findByUserId(user.id);
+
+    if (!dbToken) {
+      throw new UnauthorizedException('refresh токен не найден в базе');
+    }
 
     // Проверяем, соответствует ли токен из базы данных переданному токену обновления
     if (dbToken.refreshToken !== refreshToken) {

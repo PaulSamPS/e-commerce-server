@@ -13,7 +13,7 @@ import { LoginUserDto } from '@/modules/users/dto';
 import * as bcrypt from 'bcrypt';
 import { CodeService } from '@/modules/code/code.service';
 import { JwtTokenService } from '@/modules/token';
-import {JwtService} from "@nestjs/jwt";
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
@@ -22,10 +22,10 @@ export class UsersService {
     private readonly userModel: typeof UsersModel,
     private readonly tokenService: JwtTokenService,
     private readonly codeService: CodeService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
   ) {}
 
-  private readonly excludedFields = ['password'];
+  private readonly excludedFields = ['password', 'isAdmin'];
 
   /**
    * Находит пользователя по указанным параметрам фильтра.
@@ -150,9 +150,7 @@ export class UsersService {
    * @param loginUserDto Данные для аутентификации пользователя.
    * @returns Токены доступа и обновления.
    */
-  async login(
-    loginUserDto: LoginUserDto,
-  ) {
+  async login(loginUserDto: LoginUserDto) {
     const { email, password } = loginUserDto;
 
     const user = await this.findOne({ email });
@@ -171,10 +169,10 @@ export class UsersService {
 
     const token = await this.tokenService.generateJwtToken({ user: userData });
 
-    return {token, user: userData}
+    return { token, user: userData };
   }
 
   async refresh(access: string) {
-    return  await this.jwtService.decode(access)
+    return await this.jwtService.decode(access);
   }
 }
