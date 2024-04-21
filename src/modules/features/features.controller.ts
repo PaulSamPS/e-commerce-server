@@ -10,7 +10,9 @@ import {
 } from '@nestjs/common';
 import { FeaturesService } from './features.service';
 import { FeaturesDtoCreate } from '@/modules/features/dto/features.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Features')
 @Controller('features')
 export class FeaturesController {
   constructor(private readonly featuresService: FeaturesService) {}

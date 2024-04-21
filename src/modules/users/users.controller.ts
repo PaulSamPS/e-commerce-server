@@ -7,7 +7,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto, LoginUserDto } from './dto';
 import { RegistrationResponseType, LoginResponseType } from './types';
@@ -18,16 +18,12 @@ import {
   Response as ExpressResponse,
   Request as ExpressRequest,
 } from 'express';
-import { JwtTokenService } from '@/modules/token';
 import { setAuthCookie } from '@/lib/set-auth-cookie';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(
-    private readonly userService: UsersService,
-    private readonly authService: JwtTokenService,
-  ) {}
+  constructor(private readonly userService: UsersService) {}
 
   /**
    * Регистрирует нового пользователя.
@@ -78,7 +74,7 @@ export class UsersController {
    * @returns Результат обновления токена.
    */
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiCookieAuth()
   @Get('refresh-token')
   async refreshToken(@Req() req: ExpressRequest) {
     return await this.userService.refresh(

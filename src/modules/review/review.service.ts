@@ -3,14 +3,16 @@ import { InjectModel } from '@nestjs/sequelize';
 import { ReviewModel } from '@/modules/review/review.model';
 import { ReviewsDtoCreate } from '@/modules/review/dto/review.dto';
 import { Op } from 'sequelize';
-import { ProductService } from '@/modules/product';
+import { ProductsService } from '@/modules/product';
+import { UsersService } from '@/modules/users';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class ReviewService {
   constructor(
     @InjectModel(ReviewModel)
     private reviewsModel: typeof ReviewModel,
-    private productService: ProductService,
+    private productService: ProductsService,
   ) {}
 
   async topProducts() {
@@ -29,49 +31,50 @@ export class ReviewService {
         where: { product, user },
       });
 
-      if (existingReview) {
-        return {
-          message: 'Вы уже оставляли отзыв о данном товаре',
-          status: HttpStatus.CONFLICT,
-        };
+      if (!existingReview) {
+        // Находим все отзывы для данного товара
+        const productReviews = await this.reviewsModel.findAndCountAll({
+          where: { product },
+        });
+
+        // Получаем информацию о товаре
+        const productInstance = await this.productService.findOneById(product);
+
+        if (!productInstance) {
+          return {
+            message: 'Продукт не найден',
+            status: HttpStatus.NOT_FOUND,
+          };
+        }
+
+        // Обновляем рейтинг товара
+        const totalReviews = productReviews.count;
+        const totalRating = productReviews.rows.reduce(
+          (sum, item) => sum + item.rating,
+          0,
+        );
+        const newRating = ((totalRating + rating) / (totalReviews + 1)).toFixed(
+          1,
+        );
+        productInstance.rating = Number(newRating);
+        await productInstance.save();
+
+        // Создаем новый отзыв
+        return await this.reviewsModel.create({
+          user,
+          product,
+          firstName,
+          lastName,
+          rating,
+          review,
+          approved: false,
+        });
       }
 
-      // Находим все отзывы для данного товара
-      const productReviews = await this.reviewsModel.findAndCountAll({
-        where: { product },
-      });
-
-      // Получаем информацию о товаре
-      const productInstance = await this.productService.findOneById(product);
-
-      if (!productInstance) {
-        return {
-          message: 'Продукт не найден',
-          status: HttpStatus.NOT_FOUND,
-        };
-      }
-
-      // Обновляем рейтинг товара
-      const totalReviews = productReviews.count;
-      const totalRating = productReviews.rows.reduce(
-        (sum, item) => sum + item.rating,
-        0,
-      );
-      const newRating = ((totalRating + rating) / (totalReviews + 1)).toFixed(
-        1,
-      );
-      productInstance.rating = Number(newRating);
-      await productInstance.save();
-
-      // Создаем новый отзыв
-      return await this.reviewsModel.create({
-        product,
-        firstName,
-        lastName,
-        rating,
-        review,
-        approved: false,
-      });
+      return {
+        message: 'Вы уже оставляли отзыв о данном товаре',
+        status: HttpStatus.CONFLICT,
+      };
     } catch (error) {
       console.error('Ошибка при создании отзыва:', error);
       return {
@@ -82,26 +85,36 @@ export class ReviewService {
   }
 
   async findAll(product: number) {
-    const reviews = await this.reviewsModel.findAndCountAll({
-      where: { product },
-    });
+    const reviews = await this.fetchReviews(product);
 
     if (!reviews) {
-      return {
-        message: 'Пока еще никто не оставил отзыв',
-        status: HttpStatus.CONFLICT,
-      };
+      return this.noReviewsFoundResponse();
     }
+
     const { count, rows } = reviews;
+    const averageRating = this.calculateRating(rows, count);
+    const sortedReviews = this.sortReviewsByRating(rows);
 
-    const rating = (
-      rows.reduce((sum, item) => sum + item.rating, 0) / count
-    ).toFixed(1);
+    return { sortedReviews, count, averageRating };
+  }
 
-    const sort = rows.sort(function (a, b) {
-      return b.rating - a.rating;
-    });
+  private async fetchReviews(product: number) {
+    return await this.reviewsModel.findAndCountAll({ where: { product } });
+  }
 
-    return { sort, count, rating };
+  private noReviewsFoundResponse() {
+    return {
+      message: 'Пока еще никто не оставил отзыв',
+      status: HttpStatus.CONFLICT,
+    };
+  }
+
+  private calculateRating(reviews: ReviewModel[], count: number) {
+    const totalRating = reviews.reduce((sum, item) => sum + item.rating, 0);
+    return (totalRating / count).toFixed(1);
+  }
+
+  private sortReviewsByRating(reviews: ReviewModel[]) {
+    return reviews.sort((a, b) => b.rating - a.rating);
   }
 }

@@ -13,32 +13,27 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ProductService } from './product.service';
+import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiOkResponse } from '@nestjs/swagger';
-import {
-  ProductRequest,
-  PaginateAndFilters,
-  FindOneResponse,
-  ProductResponse,
-  GetByNameRequest,
-  GetByNameResponse,
-  NewResponse,
-  SearchRequest,
-  SearchResponse,
-} from './types';
-import { ProductModel } from './product.model';
+import { ApiOkResponse, ApiTags, ApiCookieAuth } from '@nestjs/swagger';
+import { ProductsModel } from './products.model';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '@/guards/jwt.guard';
 import { AdminGuard } from '@/guards/admin.guard';
+import {
+  ProductResponseType,
+  ProductResponseTypeArray,
+  ProductResponseTypePaginate,
+} from '@/modules/product/types/product-response.type';
 
-@Controller('product')
-export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+@ApiTags('Products')
+@Controller('products')
+export class ProductsController {
+  constructor(private readonly productService: ProductsService) {}
 
-  @ApiBody({ type: ProductRequest })
-  @ApiOkResponse({ type: ProductResponse })
+  @ApiCookieAuth('auth_access')
+  @ApiOkResponse({ type: ProductResponseType })
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Post('/create')
   @HttpCode(HttpStatus.CREATED)
@@ -50,6 +45,8 @@ export class ProductController {
     return this.productService.createProduct(createProductDto, files);
   }
 
+  @ApiCookieAuth('auth_access')
+  @ApiOkResponse({ type: ProductResponseType })
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Patch('/update/:productName')
   @HttpCode(HttpStatus.CREATED)
@@ -67,43 +64,43 @@ export class ProductController {
     );
   }
 
-  @ApiOkResponse({ type: PaginateAndFilters })
+  @ApiOkResponse({ type: ProductResponseTypePaginate })
   @Get()
-  getAll(@Query() query): Promise<{ count: number; rows: ProductModel[] }> {
+  getAll(@Query() query): Promise<{ count: number; rows: ProductsModel[] }> {
     return this.productService.paginateAndFilter(query);
   }
 
-  @ApiOkResponse({ type: FindOneResponse })
+  @ApiOkResponse({ type: ProductResponseType })
   @Get('find/:name')
-  getOne(@Param('name') name: string): Promise<ProductModel> {
+  getOne(@Param('name') name: string): Promise<ProductsModel> {
     return this.productService.findOneByName(name);
   }
 
-  @ApiOkResponse({ type: NewResponse })
+  @ApiOkResponse({ type: ProductResponseType })
   @Get('new')
-  getNew(): Promise<{ count: number; rows: ProductModel[] }> {
+  getNew(): Promise<{ count: number; rows: ProductsModel[] }> {
     return this.productService.findNewProducts();
   }
 
-  @ApiBody({ type: SearchRequest })
-  @ApiOkResponse({ type: SearchResponse })
+  @ApiOkResponse({ type: ProductResponseType })
   @Post('search')
   search(@Body() { productName }: { productName: string }) {
     return this.productService.searchByName(productName);
   }
 
-  @ApiBody({ type: GetByNameRequest })
-  @ApiOkResponse({ type: GetByNameResponse })
+  @ApiOkResponse({ type: ProductResponseType })
   @Post('name')
   getByName(@Body() { name }: { name: string }) {
     return this.productService.findOneByName(name);
   }
 
+  @ApiOkResponse({ type: ProductResponseTypeArray })
   @Get('top-products')
   async topProducts() {
     return await this.productService.getTopProducts();
   }
 
+  @ApiOkResponse({ type: ProductResponseTypeArray })
   @Get('/category/:category')
   getProductsByCategory(@Param('category') category: string) {
     return this.productService.getProductsByCategory(category);

@@ -14,7 +14,7 @@ type Images = {
   name: string;
 };
 @Table({ tableName: 'products' })
-export class ProductModel extends Model<ProductModel> {
+export class ProductsModel extends Model<ProductsModel> {
   @HasMany(() => ReviewModel, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',

@@ -8,7 +8,7 @@ import { TokenModule } from '@/modules/token';
 import { MulterModule } from '@nestjs/platform-express';
 import { ReviewModule } from '@/modules/review/review.module';
 import { FeaturesModule } from '@/modules/features/features.module';
-import { ProductModule } from '@/modules/product';
+import { ProductsModule } from '@/modules/product';
 import { FilesModule } from '@/modules/files';
 
 /**
@@ -38,7 +38,7 @@ import { FilesModule } from '@/modules/files';
     TokenModule,
     ReviewModule,
     FeaturesModule,
-    ProductModule,
+    ProductsModule,
     FilesModule,
     MulterModule.register({ dest: './uploads ' }),
   ],

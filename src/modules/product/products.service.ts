@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { ProductModel } from './product.model';
+import { ProductsModel } from './products.model';
 import { CreateProductDto } from './dto/create-product.dto';
 import { Op } from 'sequelize';
 import { IProductsQuery } from './types';
@@ -13,10 +13,10 @@ import { calculateDiscount } from './lib/calculate-discount';
 import { UpdateProductDto } from '@/modules/product/dto/update-product.dto';
 
 @Injectable()
-export class ProductService {
+export class ProductsService {
   constructor(
-    @InjectModel(ProductModel)
-    private productModel: typeof ProductModel,
+    @InjectModel(ProductsModel)
+    private productModel: typeof ProductsModel,
     private readonly fileService: FilesService,
   ) {}
 
@@ -29,7 +29,7 @@ export class ProductService {
 
   async paginateAndFilter(
     query: IProductsQuery,
-  ): Promise<{ count: number; rows: ProductModel[] }> {
+  ): Promise<{ count: number; rows: ProductsModel[] }> {
     const limit: number = +query.limit;
     const offset: number = +query.offset;
     return this.productModel.findAndCountAll({
@@ -38,33 +38,33 @@ export class ProductService {
     });
   }
 
-  async findNewProducts(): Promise<{ count: number; rows: ProductModel[] }> {
+  async findNewProducts(): Promise<{ count: number; rows: ProductsModel[] }> {
     return this.productModel.findAndCountAll({
       where: { isNew: true },
     });
   }
 
-  async findOneByName(name: string): Promise<ProductModel> {
+  async findOneByName(name: string): Promise<ProductsModel> {
     return this.productModel.findOne({
       where: { name },
       include: this.defaultIncludes(),
     });
   }
 
-  async findAllByCategory(category: string): Promise<ProductModel[]> {
+  async findAllByCategory(category: string): Promise<ProductsModel[]> {
     return this.productModel.findAll({
       where: { category },
       include: this.defaultIncludes(),
     });
   }
 
-  async findOneById(id: number | string): Promise<ProductModel> {
+  async findOneById(id: number | string): Promise<ProductsModel> {
     return this.productModel.findOne({ where: { id } });
   }
 
   async searchByName(
     name: string,
-  ): Promise<{ count: number; rows: ProductModel[] }> {
+  ): Promise<{ count: number; rows: ProductsModel[] }> {
     return await this.productModel.findAndCountAll({
       limit: 20,
       where: { name: { [Op.iLike]: `%${name}%` } },
@@ -74,7 +74,7 @@ export class ProductService {
   async createProduct(
     createProductDto: CreateProductDto,
     files: Express.Multer.File[],
-  ): Promise<ProductModel | { message: string; status: HttpStatus }> {
+  ): Promise<ProductsModel | { message: string; status: HttpStatus }> {
     try {
       const imagesArr: MFile[] = await this.fileService.convertToWebp(files);
       const convertedImages: FileElementResponse[] =
@@ -94,7 +94,7 @@ export class ProductService {
       }
 
       // Создаем новый экземпляр модели
-      const product = new ProductModel({
+      const product = new ProductsModel({
         price: createProductDto.price,
         oldPrice: createProductDto.oldPrice,
         name: createProductDto.name,
@@ -126,7 +126,7 @@ export class ProductService {
     productName: string,
     updateProductDto: UpdateProductDto,
     files?: Express.Multer.File[],
-  ): Promise<ProductModel | { message: string; status: HttpStatus }> {
+  ): Promise<ProductsModel | { message: string; status: HttpStatus }> {
     try {
       let convertedImages: FileElementResponse[];
       if (files) {

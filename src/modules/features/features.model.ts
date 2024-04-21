@@ -5,7 +5,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript';
-import { ProductModel } from '@/modules/product/product.model';
+import { ProductsModel } from '@/modules/product/products.model';
 import { FeaturesArr } from '@/modules/features/dto/features.dto';
 
 @Table({ tableName: 'features' })
@@ -16,6 +16,6 @@ export class FeaturesModel extends Model<FeaturesModel> {
   @Column({ type: DataType.JSONB })
   features: FeaturesArr[];
 
-  @ForeignKey(() => ProductModel)
+  @ForeignKey(() => ProductsModel)
   product: number;
 }

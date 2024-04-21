@@ -1,4 +1,5 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
+import { ReviewModel } from '@/modules/review/review.model';
 
 @Table({ tableName: 'users' })
 export class UsersModel extends Model<UsersModel> {
@@ -16,4 +17,10 @@ export class UsersModel extends Model<UsersModel> {
 
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   isAdmin: boolean;
+
+  @HasMany(() => ReviewModel, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  reviews: ReviewModel;
 }

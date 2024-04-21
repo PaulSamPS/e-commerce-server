@@ -7,6 +7,7 @@ import {
 import { UsersModel } from '@/modules/users';
 import { CodeModel } from '@/modules/code/code.model';
 import { Dialect } from 'sequelize';
+import { ReviewModel } from '@/modules/review/review.model';
 
 /**
  * Интерфейс для описания конфигурации базы данных.
@@ -42,7 +43,7 @@ export class SequelizeConfigService implements SequelizeOptionsFactory {
     // Возвращаем опции конфигурации Sequelize, основанные на конфигурации базы данных
     return {
       ...databaseConfig,
-      models: [UsersModel, CodeModel],
+      models: [UsersModel, CodeModel, ReviewModel],
       autoLoadModels: true,
       define: {
         charset: 'utf8',

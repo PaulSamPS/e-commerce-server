@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { FeaturesDtoCreate } from '@/modules/features/dto/features.dto';
 import { FeaturesModel } from '@/modules/features/features.model';
 import { InjectModel } from '@nestjs/sequelize';
-import { ProductService } from '@/modules/product';
+import { ProductsService } from '@/modules/product';
 
 @Injectable()
 export class FeaturesService {
   constructor(
     @InjectModel(FeaturesModel)
     private featuresModel: typeof FeaturesModel,
-    private readonly productService: ProductService,
+    private readonly productService: ProductsService,
   ) {}
 
   async create(featuresDto: FeaturesDtoCreate) {

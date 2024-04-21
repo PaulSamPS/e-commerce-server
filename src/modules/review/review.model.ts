@@ -6,14 +6,14 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { UsersModel } from '@/modules/users';
-import { ProductModel } from '@/modules/product/product.model';
+import { ProductsModel } from '@/modules/product/products.model';
 
 @Table({ tableName: 'reviews' })
 export class ReviewModel extends Model<ReviewModel> {
   @ForeignKey(() => UsersModel)
-  user: UsersModel;
+  user: number;
 
-  @ForeignKey(() => ProductModel)
+  @ForeignKey(() => ProductsModel)
   product: number;
 
   @Column
