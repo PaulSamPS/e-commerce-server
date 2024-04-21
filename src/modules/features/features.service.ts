@@ -15,15 +15,15 @@ export class FeaturesService {
   async create(featuresDto: FeaturesDtoCreate) {
     try {
       const existingFeatures = await this.featuresModel.findOne({
-        where: { productName: featuresDto.productName },
+        where: { product: featuresDto.product },
       });
 
       if (existingFeatures) {
         throw new Error('Характеристики для данного продукта уже существуют');
       }
 
-      const product = await this.productService.findOneByName(
-        featuresDto.productName,
+      const { product } = await this.productService.findOneById(
+        featuresDto.product,
       );
 
       if (!product) {
@@ -31,7 +31,6 @@ export class FeaturesService {
       }
 
       const newFeatures = new FeaturesModel({
-        productName: featuresDto.productName,
         features: featuresDto.features,
         product: product.id, // Поправил productId
       });
@@ -45,10 +44,10 @@ export class FeaturesService {
     }
   }
 
-  async findOneByName(name: string) {
+  async findOneByName(product: number) {
     try {
       const features = await this.featuresModel.findOne({
-        where: { productName: name },
+        where: { product },
       });
 
       if (!features) {

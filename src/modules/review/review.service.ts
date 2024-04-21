@@ -56,8 +56,8 @@ export class ReviewService {
         const newRating = ((totalRating + rating) / (totalReviews + 1)).toFixed(
           1,
         );
-        productInstance.rating = Number(newRating);
-        await productInstance.save();
+        productInstance.product.rating = Number(newRating);
+        await productInstance.product.save();
 
         // Создаем новый отзыв
         return await this.reviewsModel.create({

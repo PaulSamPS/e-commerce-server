@@ -2,9 +2,8 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { ProductsModel } from './products.model';
 import { CreateProductDto } from './dto/create-product.dto';
-import { Op } from 'sequelize';
+import { Includeable, Op } from 'sequelize';
 import { IProductsQuery } from './types';
-import { FileElementResponse } from '@/modules/files/dto/file-element-response.response';
 import { ReviewModel } from '@/modules/review/review.model';
 import { FeaturesModel } from '@/modules/features/features.model';
 import { MFile } from '@/modules/files/mfile.class';
@@ -20,72 +19,124 @@ export class ProductsService {
     private readonly fileService: FilesService,
   ) {}
 
-  private defaultIncludes() {
-    return [
-      { model: ReviewModel, required: false },
-      { model: FeaturesModel, required: false },
-    ];
+  private async processProductImages(
+    productDto: CreateProductDto | UpdateProductDto,
+    files: Express.Multer.File[],
+  ) {
+    const imagesArr: MFile[] = await this.fileService.convertToWebp(files);
+    return await this.fileService.saveFile(
+      imagesArr,
+      productDto.name,
+      'products',
+    );
   }
 
-  async paginateAndFilter(
-    query: IProductsQuery,
-  ): Promise<{ count: number; rows: ProductsModel[] }> {
-    const limit: number = +query.limit;
-    const offset: number = +query.offset;
-    return this.productModel.findAndCountAll({
+  private updateProductFields(
+    product: ProductsModel,
+    updateProductDto: UpdateProductDto,
+  ) {
+    ['price', 'oldPrice', 'description', 'inStock', 'isNew', 'rating'].forEach(
+      (field) => {
+        if (updateProductDto[field] !== undefined) {
+          product[field] = updateProductDto[field];
+        }
+      },
+    );
+  }
+
+  private updateProductDiscount(
+    product: ProductsModel,
+    updateProductDto: UpdateProductDto,
+  ) {
+    if (
+      updateProductDto.price !== undefined ||
+      updateProductDto.oldPrice !== undefined
+    ) {
+      product.discount = calculateDiscount(
+        updateProductDto.oldPrice ?? product.oldPrice,
+        updateProductDto.price ?? product.price,
+      );
+    }
+  }
+
+  private async getReviewCount(productId: number): Promise<number> {
+    return ReviewModel.count({ where: { product: productId } });
+  }
+
+  private async addReviewCountToProducts(products: ProductsModel[]) {
+    return Promise.all(
+      products.map(async (product) => {
+        const reviewCount = await this.getReviewCount(product.id);
+        return { ...product.toJSON(), reviewCount };
+      }),
+    );
+  }
+
+  private defaultIncludes(): Includeable[] {
+    return [{ model: FeaturesModel, required: false }];
+  }
+
+  public async paginateAndFilter(query: IProductsQuery) {
+    const limit = Number(query.limit || 10);
+    const offset = Number(query.offset || 0);
+    const products = await this.productModel.findAndCountAll({
       limit,
       offset,
+      include: this.defaultIncludes(),
     });
+
+    const resultProducts = await this.addReviewCountToProducts(products.rows);
+
+    return { count: resultProducts.length, products: resultProducts };
   }
 
-  async findNewProducts(): Promise<{ count: number; rows: ProductsModel[] }> {
-    return this.productModel.findAndCountAll({
+  public async findNewProducts() {
+    const products = await this.productModel.findAll({
       where: { isNew: true },
     });
+    return this.addReviewCountToProducts(products);
   }
 
-  async findOneByName(name: string): Promise<ProductsModel> {
-    return this.productModel.findOne({
+  public async findOneByName(name: string) {
+    const product = await this.productModel.findOne({
       where: { name },
       include: this.defaultIncludes(),
     });
+    if (!product) return null;
+    const reviewCount = await this.getReviewCount(product.id);
+    return { product, reviewCount };
   }
 
-  async findAllByCategory(category: string): Promise<ProductsModel[]> {
-    return this.productModel.findAll({
+  public async findAllByCategory(category: string) {
+    const products = await this.productModel.findAll({
       where: { category },
       include: this.defaultIncludes(),
     });
+    return this.addReviewCountToProducts(products);
   }
 
-  async findOneById(id: number | string): Promise<ProductsModel> {
-    return this.productModel.findOne({ where: { id } });
+  public async findOneById(id: number | string) {
+    const product = await this.productModel.findOne({ where: { id } });
+    if (!product) return null;
+    const reviewCount = await this.getReviewCount(product.id);
+    return { product, reviewCount };
   }
 
-  async searchByName(
+  public async searchByName(
     name: string,
   ): Promise<{ count: number; rows: ProductsModel[] }> {
-    return await this.productModel.findAndCountAll({
+    return this.productModel.findAndCountAll({
       limit: 20,
       where: { name: { [Op.iLike]: `%${name}%` } },
     });
   }
 
-  async createProduct(
+  public async createProduct(
     createProductDto: CreateProductDto,
     files: Express.Multer.File[],
   ): Promise<ProductsModel | { message: string; status: HttpStatus }> {
     try {
-      const imagesArr: MFile[] = await this.fileService.convertToWebp(files);
-      const convertedImages: FileElementResponse[] =
-        await this.fileService.saveFile(
-          imagesArr,
-          createProductDto.name,
-          'products',
-        );
-      // Проверяем, существует ли товар с таким именем
       const existingProduct = await this.findOneByName(createProductDto.name);
-
       if (existingProduct) {
         return {
           message: 'Товар с таким именем уже существует',
@@ -93,17 +144,11 @@ export class ProductsService {
         };
       }
 
-      // Создаем новый экземпляр модели
+      const images = await this.processProductImages(createProductDto, files);
+
       const product = new ProductsModel({
-        price: createProductDto.price,
-        oldPrice: createProductDto.oldPrice,
-        name: createProductDto.name,
-        description: createProductDto.description,
-        images: convertedImages,
-        inStock: createProductDto.inStock,
-        bestseller: createProductDto.bestsellers,
-        isNew: createProductDto.isNew,
-        category: createProductDto.category,
+        ...createProductDto,
+        images,
         rating: 0,
         discount: calculateDiscount(
           createProductDto.oldPrice,
@@ -111,114 +156,67 @@ export class ProductsService {
         ),
       });
 
-      // Сохраняем созданный продукт
       return await product.save();
     } catch (error) {
       console.error('Ошибка при создании продукта:', error);
       return {
-        message: 'Внутренняя ошибка сервера при создании продукта',
+        message:
+          'Ошибка при создании продукта. Пожалуйста, попробуйте еще раз.',
         status: HttpStatus.INTERNAL_SERVER_ERROR,
       };
     }
   }
 
-  async updateProduct(
+  public async updateProduct(
     productName: string,
     updateProductDto: UpdateProductDto,
     files?: Express.Multer.File[],
   ): Promise<ProductsModel | { message: string; status: HttpStatus }> {
     try {
-      let convertedImages: FileElementResponse[];
-      if (files) {
-        const imagesArr: MFile[] = await this.fileService.convertToWebp(files);
-        convertedImages = await this.fileService.saveFile(
-          imagesArr,
-          updateProductDto.name,
-          'products',
-        );
-      }
-      // Находим существующий продукт по имени
       const existingProduct = await this.findOneByName(productName);
-
       if (!existingProduct) {
-        return {
-          message: 'Товар не найден',
-          status: HttpStatus.NOT_FOUND,
-        };
+        return { message: 'Товар не найден', status: HttpStatus.NOT_FOUND };
       }
 
-      // Обновляем поля продукта на основе данных из DTO
-      if (updateProductDto.price !== undefined) {
-        existingProduct.price = updateProductDto.price;
-        existingProduct.discount = calculateDiscount(
-          existingProduct.oldPrice,
-          updateProductDto.price,
+      if (files) {
+        existingProduct.product.images = await this.processProductImages(
+          updateProductDto,
+          files,
         );
       }
 
-      if (updateProductDto.oldPrice !== undefined) {
-        existingProduct.oldPrice = updateProductDto.oldPrice;
-        existingProduct.discount = calculateDiscount(
-          updateProductDto.oldPrice,
-          existingProduct.price,
-        );
-      }
+      this.updateProductFields(existingProduct.product, updateProductDto);
+      this.updateProductDiscount(existingProduct.product, updateProductDto);
 
-      if (updateProductDto.description !== undefined) {
-        existingProduct.description = updateProductDto.description;
-      }
-
-      if (convertedImages !== undefined) {
-        existingProduct.images = convertedImages;
-      }
-
-      if (updateProductDto.inStock !== undefined) {
-        existingProduct.inStock = updateProductDto.inStock;
-      }
-
-      if (updateProductDto.isNew !== undefined) {
-        existingProduct.isNew = updateProductDto.isNew;
-      }
-
-      if (updateProductDto.rating !== undefined) {
-        existingProduct.rating = updateProductDto.rating;
-      }
-
-      // Сохраняем обновленный продукт
-      return await existingProduct.save();
+      return await existingProduct.product.save();
     } catch (error) {
       console.error('Ошибка при обновлении продукта:', error);
       return {
-        message: 'Внутренняя ошибка сервера при обновлении продукта',
+        message:
+          'Ошибка при обновлении продукта. Пожалуйста, попробуйте еще раз.',
         status: HttpStatus.INTERNAL_SERVER_ERROR,
       };
     }
   }
 
-  async getTopProducts() {
+  public async getTopProducts() {
     const products = await this.productModel.findAll({
-      where: { rating: { [Op.gt]: 4 }, isNew: false },
+      where: { rating: { [Op.gt]: 4.7 }, isNew: false },
       include: this.defaultIncludes(),
     });
 
     if (products.length <= 0) {
-      return {
-        message: 'Продукты не найдены',
-        status: HttpStatus.CONFLICT,
-      };
+      return { message: 'Продукты не найдены', status: HttpStatus.CONFLICT };
     }
 
-    return products;
+    return this.addReviewCountToProducts(products);
   }
 
-  async getProductsByCategory(category: string) {
+  public async getProductsByCategory(category: string) {
     const products = await this.findAllByCategory(category);
 
     if (!products) {
-      return {
-        message: 'Продукты не найдены',
-        status: HttpStatus.CONFLICT,
-      };
+      return { message: 'Продукты не найдены', status: HttpStatus.CONFLICT };
     }
 
     return products;

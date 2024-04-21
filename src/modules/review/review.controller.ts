@@ -12,7 +12,7 @@ import {
 import { ReviewService } from '@/modules/review/review.service';
 import { ReviewsDtoCreate } from './dto/review.dto';
 import { JwtAuthGuard } from '@/guards/jwt.guard';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import {
   MultipleReviewsResponse,
   SingleReviewResponse,
@@ -22,9 +22,10 @@ import {
 @Controller('reviews')
 export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
+  @ApiCookieAuth('auth_access')
   @ApiOkResponse({ type: SingleReviewResponse })
   @UseGuards(JwtAuthGuard)
-  @Post()
+  @Post('/create')
   @HttpCode(HttpStatus.CREATED)
   @Header('Content-type', 'application/json')
   async createFeatures(@Body() reviewsDtoCreate: ReviewsDtoCreate) {

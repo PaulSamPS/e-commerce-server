@@ -17,7 +17,6 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiOkResponse, ApiTags, ApiCookieAuth } from '@nestjs/swagger';
-import { ProductsModel } from './products.model';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '@/guards/jwt.guard';
 import { AdminGuard } from '@/guards/admin.guard';
@@ -26,6 +25,7 @@ import {
   ProductResponseTypeArray,
   ProductResponseTypePaginate,
 } from '@/modules/product/types/product-response.type';
+import { ProductsModel } from '@/modules/product/products.model';
 
 @ApiTags('Products')
 @Controller('products')
@@ -34,7 +34,8 @@ export class ProductsController {
 
   @ApiCookieAuth('auth_access')
   @ApiOkResponse({ type: ProductResponseType })
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard)
+  @UseGuards(AdminGuard)
   @Post('/create')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FilesInterceptor('images'))
@@ -47,7 +48,8 @@ export class ProductsController {
 
   @ApiCookieAuth('auth_access')
   @ApiOkResponse({ type: ProductResponseType })
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard)
+  @UseGuards(AdminGuard)
   @Patch('/update/:productName')
   @HttpCode(HttpStatus.CREATED)
   @Header('Content-type', 'application/json')
@@ -65,20 +67,20 @@ export class ProductsController {
   }
 
   @ApiOkResponse({ type: ProductResponseTypePaginate })
-  @Get()
-  getAll(@Query() query): Promise<{ count: number; rows: ProductsModel[] }> {
+  @Get('/all')
+  getAll(@Query() query) {
     return this.productService.paginateAndFilter(query);
   }
 
   @ApiOkResponse({ type: ProductResponseType })
   @Get('find/:name')
-  getOne(@Param('name') name: string): Promise<ProductsModel> {
+  getOne(@Param('name') name: string) {
     return this.productService.findOneByName(name);
   }
 
   @ApiOkResponse({ type: ProductResponseType })
   @Get('new')
-  getNew(): Promise<{ count: number; rows: ProductsModel[] }> {
+  getNew() {
     return this.productService.findNewProducts();
   }
 
@@ -101,7 +103,7 @@ export class ProductsController {
   }
 
   @ApiOkResponse({ type: ProductResponseTypeArray })
-  @Get('/category/:category')
+  @Get('/:category')
   getProductsByCategory(@Param('category') category: string) {
     return this.productService.getProductsByCategory(category);
   }
