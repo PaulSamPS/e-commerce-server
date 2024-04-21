@@ -15,7 +15,6 @@ import { CodeService } from '@/modules/code/code.service';
 import { JwtTokenService } from '@/modules/token';
 import { JwtService } from '@nestjs/jwt';
 import { MailService } from '@/modules/mail/mail.service';
-import * as crypto from 'crypto';
 import { ResetPasswordDto } from '@/modules/users/dto/reset-password.dto';
 
 @Injectable()
@@ -181,28 +180,12 @@ export class UsersService {
     return { token, user: userData };
   }
 
-  private async generateResetToken(): Promise<string> {
-    return crypto.randomBytes(32).toString('hex');
-  }
-
-  private async updateUserResetToken(
-    user: UsersModel,
-    token: string,
-  ): Promise<void> {
-    user.resetToken = token;
-    user.resetTokenExp = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-    await user.save();
-  }
-
   async sendResetToken(resetPasswordDto: Pick<ResetPasswordDto, 'email'>) {
     const user = await this.findOne({ email: resetPasswordDto.email });
 
     if (!user) {
       throw new ForbiddenException('Пользователь не найден');
     }
-
-    const token = await this.generateResetToken();
-    await this.updateUserResetToken(user, token);
 
     return this.codeService.sendCode(resetPasswordDto);
   }
@@ -211,7 +194,7 @@ export class UsersService {
     const user = await this.findOne({ email: resetPasswordDto.email });
 
     if (!user) {
-      throw new ForbiddenException('Неверный токен сброса пароля');
+      throw new ForbiddenException('Пользователь не найден');
     }
 
     return await this.codeService.enterCode({
