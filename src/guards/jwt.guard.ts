@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import { JwtTokenService } from '@/modules/token';
+import { setAuthCookie } from '@/lib/set-auth-cookie';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -91,8 +92,8 @@ export class JwtAuthGuard implements CanActivate {
     accessToken: string,
     refreshToken: string,
   ) {
-    this.setAuthCookie(response, accessToken, 'auth_access');
-    this.setAuthCookie(response, refreshToken, 'auth_refresh');
+    setAuthCookie(response, accessToken, 'auth_access');
+    setAuthCookie(response, refreshToken, 'auth_refresh');
   }
 
   /**
@@ -137,19 +138,5 @@ export class JwtAuthGuard implements CanActivate {
       );
     }
     return secret;
-  }
-
-  /**
-   * Устанавливает куки для авторизации.
-   * @param response Ответ сервера.
-   * @param token Токен для установки.
-   * @param name Название куки.
-   */
-  private setAuthCookie(response: Response, token: string, name: string): void {
-    response.cookie(name, token, {
-      maxAge: 1000 * 60 * 60 * 24 * 30,
-      httpOnly: true,
-      secure: false,
-    });
   }
 }
