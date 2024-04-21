@@ -18,6 +18,12 @@ export class UsersModel extends Model<UsersModel> {
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   isAdmin: boolean;
 
+  @Column({ type: DataType.TEXT, defaultValue: null })
+  resetToken: string;
+
+  @Column({ type: DataType.TEXT, defaultValue: null })
+  resetTokenExp: string;
+
   @HasMany(() => ReviewModel, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',

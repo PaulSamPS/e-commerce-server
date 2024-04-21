@@ -2,6 +2,9 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
+  Param,
   Post,
   Req,
   Res,
@@ -19,6 +22,7 @@ import {
   Request as ExpressRequest,
 } from 'express';
 import { setAuthCookie } from '@/lib/set-auth-cookie';
+import { ResetPasswordDto } from '@/modules/users/dto/reset-password.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -67,6 +71,18 @@ export class UsersController {
     setAuthCookie(res, token.accessToken, 'auth_access');
     setAuthCookie(res, token.refreshToken, 'auth_refresh');
     return { user, message: 'Вход успешно выполнен' };
+  }
+
+  @Post('/reset-password/send-code')
+  @HttpCode(HttpStatus.OK)
+  resetPassword(@Body() email: Pick<LoginUserDto, 'email'>) {
+    return this.userService.sendResetToken(email);
+  }
+
+  @Post('/reset-password/enter-code')
+  @HttpCode(HttpStatus.OK)
+  checkPassToken(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.userService.checkResetToken(resetPasswordDto);
   }
 
   /**

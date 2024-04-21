@@ -26,7 +26,6 @@ export class AdminGuard implements CanActivate {
       throw new ForbiddenException('Доступ запрещен'); // Используем ForbiddenException для отказа в доступе
     }
 
-    // Проверяем, является ли пользователь администратором
     return true;
   }
 }

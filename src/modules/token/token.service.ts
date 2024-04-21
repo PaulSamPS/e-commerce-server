@@ -18,13 +18,6 @@ export class TokenService {
     return this.tokensModel.findOne({ where: { userId } });
   }
 
-  /**
-   * Создать запись о токенах для пользователя.
-   * @param userId Идентификатор пользователя.
-   * @param accessToken Токен доступа.
-   * @param refreshToken Токен обновления.
-   * @returns Созданный объект с данными токенов.
-   */
   async create(
     userId: number,
     accessToken: string,

@@ -14,18 +14,22 @@ import * as bcrypt from 'bcrypt';
 import { CodeService } from '@/modules/code/code.service';
 import { JwtTokenService } from '@/modules/token';
 import { JwtService } from '@nestjs/jwt';
+import { MailService } from '@/modules/mail/mail.service';
+import * as crypto from 'crypto';
+import { ResetPasswordDto } from '@/modules/users/dto/reset-password.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(UsersModel)
     private readonly userModel: typeof UsersModel,
-    private readonly tokenService: JwtTokenService,
+    private readonly authService: JwtTokenService,
     private readonly codeService: CodeService,
+    private readonly mailService: MailService,
     private readonly jwtService: JwtService,
   ) {}
 
-  private readonly excludedFields = ['password', 'isAdmin'];
+  private readonly excludedFields = ['password', 'isAdmin', 'resetToken'];
 
   /**
    * Находит пользователя по указанным параметрам фильтра.
@@ -33,7 +37,12 @@ export class UsersService {
    * @returns Объект пользователя.
    */
   async findOne(
-    filter: Partial<{ id?: number; username?: string; email?: string }>,
+    filter: Partial<{
+      id?: number;
+      username?: string;
+      email?: string;
+      resetToken?: string;
+    }>,
   ): Promise<UsersModel> {
     return this.userModel.findOne({ where: { ...filter } });
   }
@@ -167,9 +176,48 @@ export class UsersService {
 
     const userData = await this.findOnePublic({ email });
 
-    const token = await this.tokenService.generateJwtToken({ user: userData });
+    const token = await this.authService.generateJwtToken({ user: userData });
 
     return { token, user: userData };
+  }
+
+  private async generateResetToken(): Promise<string> {
+    return crypto.randomBytes(32).toString('hex');
+  }
+
+  private async updateUserResetToken(
+    user: UsersModel,
+    token: string,
+  ): Promise<void> {
+    user.resetToken = token;
+    user.resetTokenExp = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    await user.save();
+  }
+
+  async sendResetToken(resetPasswordDto: Pick<ResetPasswordDto, 'email'>) {
+    const user = await this.findOne({ email: resetPasswordDto.email });
+
+    if (!user) {
+      throw new ForbiddenException('Пользователь не найден');
+    }
+
+    const token = await this.generateResetToken();
+    await this.updateUserResetToken(user, token);
+
+    return this.codeService.sendCode(resetPasswordDto);
+  }
+
+  async checkResetToken(resetPasswordDto: ResetPasswordDto) {
+    const user = await this.findOne({ email: resetPasswordDto.email });
+
+    if (!user) {
+      throw new ForbiddenException('Неверный токен сброса пароля');
+    }
+
+    return await this.codeService.enterCode({
+      email: resetPasswordDto.email,
+      code: resetPasswordDto.code,
+    });
   }
 
   async refresh(access: string) {
