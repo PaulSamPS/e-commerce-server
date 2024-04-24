@@ -1,21 +1,21 @@
 import {
-  Injectable,
   ForbiddenException,
+  Injectable,
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { UsersModel } from './users.model';
-import { CreateUserDto } from '@/modules/users/dto';
+import { CreateUserDto, LoginUserDto } from '@/modules/users/dto';
 import { ActivateUserDto } from './dto/activate-user.dto';
-import { LoginUserDto } from '@/modules/users/dto';
 import * as bcrypt from 'bcrypt';
 import { CodeService } from '@/modules/code/code.service';
 import { JwtTokenService } from '@/modules/token';
 import { JwtService } from '@nestjs/jwt';
-import { MailService } from '@/modules/mail/mail.service';
-import { ResetPasswordDto } from '@/modules/users/dto/reset-password.dto';
+import { EnterCodeResetPasswordDto } from '@/modules/users/dto/enter-code-reset-password.dto';
+import { SendCodeResetPasswordDto } from '@/modules/users/dto/send-code-reset-password.dto';
+import { NewPasswordDto } from '@/modules/users/dto/new-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -24,7 +24,6 @@ export class UsersService {
     private readonly userModel: typeof UsersModel,
     private readonly authService: JwtTokenService,
     private readonly codeService: CodeService,
-    private readonly mailService: MailService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -180,27 +179,45 @@ export class UsersService {
     return { token, user: userData };
   }
 
-  async sendResetToken(resetPasswordDto: Pick<ResetPasswordDto, 'email'>) {
-    const user = await this.findOne({ email: resetPasswordDto.email });
+  async sendResetPasswordCode(
+    sendCodeResetPasswordDto: SendCodeResetPasswordDto,
+  ) {
+    const user = await this.findOne({ email: sendCodeResetPasswordDto.email });
 
     if (!user) {
       throw new ForbiddenException('Пользователь не найден');
     }
 
-    return this.codeService.sendCode(resetPasswordDto);
+    return this.codeService.sendCode(sendCodeResetPasswordDto);
   }
 
-  async checkResetToken(resetPasswordDto: ResetPasswordDto) {
-    const user = await this.findOne({ email: resetPasswordDto.email });
+  async enterResetPasswordCode(
+    enterCodeResetPasswordDto: EnterCodeResetPasswordDto,
+  ) {
+    const user = await this.findOne({ email: enterCodeResetPasswordDto.email });
 
     if (!user) {
       throw new ForbiddenException('Пользователь не найден');
     }
 
     return await this.codeService.enterCode({
-      email: resetPasswordDto.email,
-      code: resetPasswordDto.code,
+      email: enterCodeResetPasswordDto.email,
+      code: enterCodeResetPasswordDto.code,
     });
+  }
+
+  async newPassword(newPasswordDto: NewPasswordDto) {
+    const user = await this.findOne({ email: newPasswordDto.email });
+
+    if (!user) {
+      throw new ForbiddenException('Пользователь не найден');
+    }
+
+    user.password = await bcrypt.hash(newPasswordDto.password, 10);
+
+    await user.save();
+
+    return { message: 'Пароль изменен' };
   }
 
   async refresh(access: string) {

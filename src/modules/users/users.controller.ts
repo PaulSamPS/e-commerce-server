@@ -4,7 +4,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Param,
   Post,
   Req,
   Res,
@@ -22,7 +21,13 @@ import {
   Request as ExpressRequest,
 } from 'express';
 import { setAuthCookie } from '@/lib/set-auth-cookie';
-import { ResetPasswordDto } from '@/modules/users/dto/reset-password.dto';
+import { EnterCodeResetPasswordDto } from '@/modules/users/dto/enter-code-reset-password.dto';
+import {
+  EnterCodeResponseType,
+  SendCodeResponseType,
+} from './types/reset-response.type';
+import { SendCodeResetPasswordDto } from '@/modules/users/dto/send-code-reset-password.dto';
+import { NewPasswordDto } from '@/modules/users/dto/new-password.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -73,16 +78,27 @@ export class UsersController {
     return { user, message: 'Вход успешно выполнен' };
   }
 
+  @ApiOkResponse({ type: SendCodeResponseType })
   @Post('/reset-password/send-code')
   @HttpCode(HttpStatus.OK)
-  resetPassword(@Body() email: Pick<LoginUserDto, 'email'>) {
-    return this.userService.sendResetToken(email);
+  async sendResetPasswordCode(
+    @Body() sendCodeResetPasswordDto: SendCodeResetPasswordDto,
+  ) {
+    return this.userService.sendResetPasswordCode(sendCodeResetPasswordDto);
   }
 
+  @ApiOkResponse({ type: EnterCodeResponseType })
   @Post('/reset-password/enter-code')
   @HttpCode(HttpStatus.OK)
-  checkPassToken(@Body() resetPasswordDto: ResetPasswordDto) {
-    return this.userService.checkResetToken(resetPasswordDto);
+  async enterResetPasswordCode(
+    @Body() enterCodeResetPasswordDto: EnterCodeResetPasswordDto,
+  ) {
+    return this.userService.enterResetPasswordCode(enterCodeResetPasswordDto);
+  }
+
+  @Post('/new-password')
+  async newPassword(@Body() newPasswordDto: NewPasswordDto) {
+    return this.userService.newPassword(newPasswordDto);
   }
 
   /**

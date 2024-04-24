@@ -23,9 +23,8 @@ export class ProductsService {
     productDto: CreateProductDto | UpdateProductDto,
     files: Express.Multer.File[],
   ) {
-    const imagesArr: MFile[] = await this.fileService.convertToWebp(files);
-    return await this.fileService.saveFile(
-      imagesArr,
+    return this.fileService.processAndSaveImages(
+      files,
       productDto.name,
       'products',
     );

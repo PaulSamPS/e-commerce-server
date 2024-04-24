@@ -58,7 +58,7 @@ export class CodeService {
     });
 
     if (!existingCode) {
-      throw new BadRequestException({ message: 'Получите новый код' });
+      throw new BadRequestException({ message: 'Неверный код' });
     }
 
     const isCodeValid = new Date() < addHours(existingCode.updatedAt, 1);

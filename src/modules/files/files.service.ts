@@ -80,4 +80,22 @@ export class FilesService {
     }
     return null;
   }
+
+  async processAndSaveOneImage(
+    file: Express.Multer.File,
+    name: string,
+    folder: string,
+  ): Promise<FileElementResponse> {
+    const imagesArr: MFile = await this.convertToWebpOne(file);
+    return await this.saveFileOne(imagesArr, name, folder);
+  }
+
+  async processAndSaveImages(
+    file: Express.Multer.File[],
+    name: string,
+    folder: string,
+  ): Promise<FileElementResponse[]> {
+    const imagesArr: MFile[] = await this.convertToWebp(file);
+    return await this.saveFile(imagesArr, name, folder);
+  }
 }
