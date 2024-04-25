@@ -6,14 +6,12 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '@/modules/users';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UsersService,
-    private readonly configService: ConfigService,
   ) {}
 
   async canActivate(context: ExecutionContext) {

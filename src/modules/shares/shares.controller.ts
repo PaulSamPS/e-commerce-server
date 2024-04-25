@@ -11,7 +11,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { MFile } from '@/modules/files/mfile.class';
 import { FileElementResponse } from '@/modules/files/dto/file-element-response.response';
 import { FilesService } from '@/modules/files';
 import { SharesService } from '@/modules/shares/shares.service';
@@ -27,16 +26,16 @@ export class SharesController {
     private readonly fileService: FilesService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
-  @UseGuards(AdminGuard)
-  @Post('/')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Post()
   @HttpCode(HttpStatus.CREATED)
   @Header('Content-type', 'application/json')
   @UseInterceptors(FilesInterceptor('image'))
   async createShares(
     @Body() sharesDto: SharesDto,
-    @UploadedFiles() files: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
   ): Promise<SharesModel | { message: string; status: HttpStatus }> {
+    console.log(files);
     const convertedImages: FileElementResponse =
       await this.fileService.processAndSaveOneImage(
         files,
@@ -46,7 +45,7 @@ export class SharesController {
     return this.sharesService.create(sharesDto, convertedImages);
   }
 
-  @Get('/')
+  @Get('')
   getShares(): Promise<SharesModel[]> {
     return this.sharesService.getShares();
   }

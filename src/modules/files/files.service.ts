@@ -8,7 +8,7 @@ import * as uuid from 'uuid';
 
 @Injectable()
 export class FilesService {
-  async saveFile(
+  private async saveFile(
     files: MFile[],
     name: string,
     folder: string,
@@ -32,7 +32,7 @@ export class FilesService {
     return res;
   }
 
-  async convertToWebp(files: Express.Multer.File[]): Promise<MFile[]> {
+  private async convertToWebp(files: Express.Multer.File[]): Promise<MFile[]> {
     const imagesArr: MFile[] = [];
     for (const file of files) {
       if (file.mimetype && file.mimetype.includes('image')) {
@@ -51,28 +51,30 @@ export class FilesService {
     await emptyDir(`${path}/uploads/profile/${username}`);
   }
 
-  async saveFileOne(
+  private async saveFileOne(
     file: MFile,
     name: string,
     folder: string,
   ): Promise<FileElementResponse> {
     const uploadFolder = `${path}/uploads/${folder}/${name}`;
     await ensureDir(uploadFolder);
+
     const fileName = `${uuid.v4().split('.')[0]}.${file.originalname
       .split('.')
       .pop()}`;
     const buffer = await sharp(file.buffer).toBuffer();
     await writeFile(`${uploadFolder}/${fileName}`, buffer);
+
     return {
       url: `/static/${folder}/${name}/${fileName}`,
       name: fileName,
     };
   }
 
-  async convertToWebpOne(file: Express.Multer.File): Promise<MFile> {
-    if (file.mimetype && file.mimetype.includes('image')) {
+  private async convertToWebpOne(file: Express.Multer.File[]): Promise<MFile> {
+    if (file[0].mimetype && file[0].mimetype.includes('image')) {
       const fileName = `${uuid.v4().split('.')[0]}.webp`;
-      const buffer = await sharp(file.buffer).webp().toBuffer();
+      const buffer = await sharp(file[0].buffer).webp().toBuffer();
       return {
         originalname: fileName,
         buffer: buffer,
@@ -82,12 +84,12 @@ export class FilesService {
   }
 
   async processAndSaveOneImage(
-    file: Express.Multer.File,
+    files: Express.Multer.File[],
     name: string,
     folder: string,
   ): Promise<FileElementResponse> {
-    const imagesArr: MFile = await this.convertToWebpOne(file);
-    return await this.saveFileOne(imagesArr, name, folder);
+    const image: MFile = await this.convertToWebpOne(files);
+    return await this.saveFileOne(image, name, folder);
   }
 
   async processAndSaveImages(

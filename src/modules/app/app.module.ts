@@ -10,6 +10,8 @@ import { ReviewModule } from '@/modules/review/review.module';
 import { FeaturesModule } from '@/modules/features/features.module';
 import { ProductsModule } from '@/modules/product';
 import { FilesModule } from '@/modules/files';
+import { SharesModel } from '@/modules/shares/shares.model';
+import { SharesModule } from '@/modules/shares/shares.module';
 
 /**
  * Модуль приложения, который объединяет все остальные модули и провайдеры.
@@ -40,6 +42,7 @@ import { FilesModule } from '@/modules/files';
     FeaturesModule,
     ProductsModule,
     FilesModule,
+    SharesModule,
     MulterModule.register({ dest: './uploads ' }),
   ],
 })
