@@ -223,4 +223,8 @@ export class UsersService {
   async refresh(access: string) {
     return await this.jwtService.decode(access);
   }
+
+  async checkAuth(token: string) {
+    return await this.jwtService.decode(token);
+  }
 }

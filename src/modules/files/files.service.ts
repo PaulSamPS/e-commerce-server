@@ -16,7 +16,7 @@ export class FilesService {
     const uploadFolder = `${path}/uploads/${folder}/${name}`;
     await ensureDir(uploadFolder);
     const res: FileElementResponse[] = [];
-
+    console.log(files);
     for (const file of files) {
       const fileName = `${uuid.v4().split('.')[0]}.${file.originalname
         .split('.')

@@ -42,7 +42,6 @@ export class JwtTokenService {
     if (!refreshToken) {
       throw new UnauthorizedException('Не автоизован и нет refresh токена');
     }
-    console.log(refreshToken, 'refresh');
     // Проверяем валидность токена обновления и извлекаем пользователя из него
     const { user } = this.verifyToken(refreshToken, 'refresh');
 

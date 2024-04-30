@@ -35,7 +35,6 @@ export class SharesController {
     @Body() sharesDto: SharesDto,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<SharesModel | { message: string; status: HttpStatus }> {
-    console.log(files);
     const convertedImages: FileElementResponse =
       await this.fileService.processAndSaveOneImage(
         files,

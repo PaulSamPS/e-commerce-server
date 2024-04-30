@@ -113,4 +113,13 @@ export class UsersController {
       req.cookies['auth_access'] || req.cookies['auth_refresh'],
     );
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('check-auth')
+  async checkAuth(@Req() req: ExpressRequest) {
+    console.log('123');
+    return await this.userService.checkAuth(
+      req.cookies['auth_access'] || req.cookies['auth_refresh'],
+    );
+  }
 }

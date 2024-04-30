@@ -6,7 +6,6 @@ import { Includeable, Op } from 'sequelize';
 import { IProductsQuery } from './types';
 import { ReviewModel } from '@/modules/review/review.model';
 import { FeaturesModel } from '@/modules/features/features.model';
-import { MFile } from '@/modules/files/mfile.class';
 import { FilesService } from '@/modules/files';
 import { calculateDiscount } from './lib/calculate-discount';
 import { UpdateProductDto } from '@/modules/product/dto/update-product.dto';
@@ -87,6 +86,12 @@ export class ProductsService {
     const resultProducts = await this.addReviewCountToProducts(products.rows);
 
     return { count: resultProducts.length, products: resultProducts };
+  }
+
+  public async findAll() {
+    return this.productModel.findAll();
+    // return await this.addReviewCountToProducts(products);
+    // return products;
   }
 
   public async findNewProducts() {
@@ -202,6 +207,7 @@ export class ProductsService {
     const products = await this.productModel.findAll({
       where: { rating: { [Op.gt]: 4.7 }, isNew: false },
       include: this.defaultIncludes(),
+      limit: 10,
     });
 
     if (products.length <= 0) {

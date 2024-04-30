@@ -10,8 +10,10 @@ import { ReviewModule } from '@/modules/review/review.module';
 import { FeaturesModule } from '@/modules/features/features.module';
 import { ProductsModule } from '@/modules/product';
 import { FilesModule } from '@/modules/files';
-import { SharesModel } from '@/modules/shares/shares.model';
 import { SharesModule } from '@/modules/shares/shares.module';
+import { DayProductsModule } from '@/modules/day-products/day-products.module';
+import { CartModule } from '@/modules/cart';
+import { JwtModule } from '@nestjs/jwt';
 
 /**
  * Модуль приложения, который объединяет все остальные модули и провайдеры.
@@ -43,6 +45,8 @@ import { SharesModule } from '@/modules/shares/shares.module';
     ProductsModule,
     FilesModule,
     SharesModule,
+    CartModule,
+    DayProductsModule,
     MulterModule.register({ dest: './uploads ' }),
   ],
 })

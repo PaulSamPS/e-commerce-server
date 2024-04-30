@@ -34,8 +34,7 @@ export class ProductsController {
 
   @ApiCookieAuth('auth_access')
   @ApiOkResponse({ type: ProductResponseType })
-  @UseGuards(JwtAuthGuard)
-  @UseGuards(AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Post('/create')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FilesInterceptor('images'))
@@ -43,6 +42,7 @@ export class ProductsController {
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
+    console.log(files);
     return this.productService.createProduct(createProductDto, files);
   }
 
