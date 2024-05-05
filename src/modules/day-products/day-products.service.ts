@@ -19,16 +19,12 @@ export class DayProductsService {
     const existingDayProducts = await this.dayProductsModel.findOne();
     const product = await this.productService.findAll();
 
-    // console.log(product, 'day');
-
     if (!product) {
       dayProductsModel.dayProducts = [];
       return await dayProductsModel.save();
     }
 
     const dayProducts = [];
-    // размер скидки
-    const percent = [10, 15, 20];
 
     const p = product.map((i) => i);
 
@@ -94,7 +90,10 @@ export class DayProductsService {
 
   async getOneDayProducts(productName: string) {
     const products = await this.dayProductsModel.findOne();
-    return products.dayProducts.find((product) => product.name === productName);
+
+    return products.dayProducts.find(
+      (product: ProductsModel) => product.name === productName,
+    );
   }
 
   async getYesterdayProducts() {

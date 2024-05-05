@@ -25,7 +25,6 @@ import {
   ProductResponseTypeArray,
   ProductResponseTypePaginate,
 } from '@/modules/product/types/product-response.type';
-import { ProductsModel } from '@/modules/product/products.model';
 
 @ApiTags('Products')
 @Controller('products')
@@ -42,7 +41,6 @@ export class ProductsController {
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    console.log(files);
     return this.productService.createProduct(createProductDto, files);
   }
 
@@ -87,6 +85,7 @@ export class ProductsController {
   @ApiOkResponse({ type: ProductResponseType })
   @Post('search')
   search(@Body() { productName }: { productName: string }) {
+    console.log(productName, '000');
     return this.productService.searchByName(productName);
   }
 

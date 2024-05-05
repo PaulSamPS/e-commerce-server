@@ -32,7 +32,8 @@ export class FeaturesService {
 
       const newFeatures = new FeaturesModel({
         features: featuresDto.features,
-        product: product.id, // Поправил productId
+        product: product.id,
+        productName: product.name,
       });
 
       await newFeatures.save();
@@ -44,17 +45,17 @@ export class FeaturesService {
     }
   }
 
-  async findOneByName(product: number) {
+  async findOneByName(productName: string) {
     try {
       const features = await this.featuresModel.findOne({
-        where: { product },
+        where: { productName: productName },
       });
 
       if (!features) {
         throw new Error('Характеристики не найдены');
       }
 
-      return features;
+      return features.features;
     } catch (error) {
       console.error('Ошибка при поиске характеристик:', error);
       throw new Error('Внутренняя ошибка сервера при поиске характеристик');

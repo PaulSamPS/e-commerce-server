@@ -1,33 +1,30 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { DayProductsService } from '@/modules/day-products/day-products.service';
+import { Cron } from '@nestjs/schedule';
 
 @Controller('day-products')
 export class DayProductsController {
   constructor(private readonly dayProductsService: DayProductsService) {}
 
-  @Get('/set')
-  setDayProducts() {
+  @Cron('0 0 * * *', { name: 'dayProducts', timeZone: 'Europe/Moscow' })
+  async setDayProducts() {
+    await this.dayProductsService.setYesterday();
     return this.dayProductsService.setDayProducts();
   }
 
-  @Get('/yesterday/set')
-  async setYesterday() {
-    return await this.dayProductsService.setYesterday();
-  }
-
-  @Get('/get')
+  @Get()
   getDayProducts() {
     return this.dayProductsService.getDayProducts();
   }
 
-  @Get('/get/:productName')
+  @Get('find/:productName')
   getOneDayProducts(@Param('productName') productName: string) {
-    console.log(productName);
     return this.dayProductsService.getOneDayProducts(productName);
   }
 
-  @Get('/yesterday/get')
+  @Get('yesterday')
   getYesterdayProducts() {
+    console.log('999');
     return this.dayProductsService.getYesterdayProducts();
   }
 }

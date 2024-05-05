@@ -130,7 +130,7 @@ export class ProductsService {
     name: string,
   ): Promise<{ count: number; rows: ProductsModel[] }> {
     return this.productModel.findAndCountAll({
-      limit: 20,
+      limit: 10,
       where: { name: { [Op.iLike]: `%${name}%` } },
     });
   }

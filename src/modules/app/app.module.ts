@@ -13,7 +13,7 @@ import { FilesModule } from '@/modules/files';
 import { SharesModule } from '@/modules/shares/shares.module';
 import { DayProductsModule } from '@/modules/day-products/day-products.module';
 import { CartModule } from '@/modules/cart';
-import { JwtModule } from '@nestjs/jwt';
+import { ScheduleModule } from '@nestjs/schedule';
 
 /**
  * Модуль приложения, который объединяет все остальные модули и провайдеры.
@@ -26,6 +26,8 @@ import { JwtModule } from '@nestjs/jwt';
       load: [databaseConfig], // Загрузка конфигурации базы данных
       isGlobal: true, // Определение глобального доступа к конфигурации
     }),
+
+    ScheduleModule.forRoot(),
 
     // Подключение модуля Sequelize для работы с базой данных
     SequelizeModule.forRootAsync({

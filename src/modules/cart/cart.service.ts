@@ -117,7 +117,10 @@ export class CartService {
 
     await exitingShoppingCart.save();
 
-    return exitingShoppingCart;
+    return {
+      ...exitingShoppingCart.toJSON(),
+      message: 'Продукт добавлен в корзину',
+    };
   }
 
   async increaseCountAndTotalPrice(addToCartDto: AddToCartDto, userId: number) {
@@ -218,7 +221,9 @@ export class CartService {
           : 0;
       exitingShoppingCart.products = productInTheCart;
 
-      return await exitingShoppingCart.save();
+      const cart = await exitingShoppingCart.save();
+
+      return { ...cart.toJSON(), message: 'Продукт удален из корзины' };
     }
   }
 

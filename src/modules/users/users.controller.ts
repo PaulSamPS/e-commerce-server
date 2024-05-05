@@ -28,6 +28,7 @@ import {
 } from './types/reset-response.type';
 import { SendCodeResetPasswordDto } from '@/modules/users/dto/send-code-reset-password.dto';
 import { NewPasswordDto } from '@/modules/users/dto/new-password.dto';
+import { clearCookie } from '@/lib/clear-cookie';
 
 @ApiTags('Users')
 @Controller('users')
@@ -121,5 +122,15 @@ export class UsersController {
     return await this.userService.checkAuth(
       req.cookies['auth_access'] || req.cookies['auth_refresh'],
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/logout')
+  logout(@Res({ passthrough: true }) res: ExpressResponse): {
+    message: string;
+  } {
+    clearCookie(res, 'auth_access');
+    clearCookie(res, 'auth_refresh');
+    return { message: 'Выход успешен' };
   }
 }

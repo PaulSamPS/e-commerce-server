@@ -7,6 +7,9 @@ export class FeaturesArr {
 
 export class FeaturesDtoCreate {
   @IsNotEmpty()
+  productName: string;
+
+  @IsNotEmpty()
   product: number;
 
   @IsNotEmpty()

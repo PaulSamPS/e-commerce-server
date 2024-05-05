@@ -40,7 +40,7 @@ export class CartController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({ type: AddToCartResponse })
-  @Post('add')
+  @Post()
   async addToCart(
     @Body() addToCart: AddToCartDto,
     @Cookies('auth_access') token: string,
@@ -72,7 +72,7 @@ export class CartController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete('remove-product/:productId')
+  @Delete(':productId')
   async removeOne(
     @Param('productId') productId: number,
     @Cookies('auth_access') token: string,
@@ -83,7 +83,7 @@ export class CartController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete('remove-all')
+  @Delete()
   async removeAll(@Req() request): Promise<CartModel> {
     const accessToken = request.cookies.auth_access;
     const { user } = await this.getUserFromToken(accessToken);
