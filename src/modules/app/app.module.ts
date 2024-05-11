@@ -14,6 +14,7 @@ import { SharesModule } from '@/modules/shares/shares.module';
 import { DayProductsModule } from '@/modules/day-products/day-products.module';
 import { CartModule } from '@/modules/cart';
 import { ScheduleModule } from '@nestjs/schedule';
+import { FavouritesModule } from '@/modules/favourites/favourites.module';
 
 /**
  * Модуль приложения, который объединяет все остальные модули и провайдеры.
@@ -49,6 +50,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     SharesModule,
     CartModule,
     DayProductsModule,
+    FavouritesModule,
     MulterModule.register({ dest: './uploads ' }),
   ],
 })

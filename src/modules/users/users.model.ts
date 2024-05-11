@@ -8,6 +8,7 @@ import {
 } from 'sequelize-typescript';
 import { ReviewModel } from '@/modules/review/review.model';
 import { CartModel } from '@/modules/cart/cart.model';
+import { FavouritesModel } from '@/modules/favourites/favourites.model';
 
 @Table({ tableName: 'users' })
 export class UsersModel extends Model<UsersModel> {
@@ -37,4 +38,10 @@ export class UsersModel extends Model<UsersModel> {
     onUpdate: 'CASCADE',
   })
   shoppingCart: CartModel;
+
+  @HasMany(() => FavouritesModel, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  favourites: FavouritesModel;
 }

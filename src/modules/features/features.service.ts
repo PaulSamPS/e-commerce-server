@@ -3,6 +3,7 @@ import { FeaturesDtoCreate } from '@/modules/features/dto/features.dto';
 import { FeaturesModel } from '@/modules/features/features.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { ProductsService } from '@/modules/product';
+import { DayProductsService } from '@/modules/day-products/day-products.service';
 
 @Injectable()
 export class FeaturesService {
@@ -10,6 +11,7 @@ export class FeaturesService {
     @InjectModel(FeaturesModel)
     private featuresModel: typeof FeaturesModel,
     private readonly productService: ProductsService,
+    private readonly dayProductService: DayProductsService,
   ) {}
 
   async create(featuresDto: FeaturesDtoCreate) {
@@ -52,7 +54,14 @@ export class FeaturesService {
       });
 
       if (!features) {
-        throw new Error('Характеристики не найдены');
+        const dayProduct = await this.dayProductService.getDayProducts();
+        const dayFeatures = await this.featuresModel.findOne({
+          where: { productName: dayProduct[0].name },
+        });
+
+        return dayFeatures.features;
+
+        // throw new Error('Характеристики не найдены');
       }
 
       return features.features;

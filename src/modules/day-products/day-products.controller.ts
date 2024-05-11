@@ -12,6 +12,18 @@ export class DayProductsController {
     return this.dayProductsService.setDayProducts();
   }
 
+  @Get('set-day')
+  @Get()
+  setDay() {
+    return this.dayProductsService.setDayProducts();
+  }
+
+  @Get('set-yest-day')
+  @Get()
+  setYest() {
+    return this.dayProductsService.setYesterday();
+  }
+
   @Get()
   getDayProducts() {
     return this.dayProductsService.getDayProducts();

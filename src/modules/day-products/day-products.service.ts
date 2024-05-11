@@ -5,7 +5,6 @@ import { ProductsService } from '@/modules/product';
 import { ProductsModel } from '@/modules/product/products.model';
 import { ReviewModel } from '@/modules/review/review.model';
 
-// let dayProducts: Product[] = [];
 @Injectable()
 export class DayProductsService {
   constructor(
@@ -91,9 +90,15 @@ export class DayProductsService {
   async getOneDayProducts(productName: string) {
     const products = await this.dayProductsModel.findOne();
 
-    return products.dayProducts.find(
+    const dayProduct = products.dayProducts.find(
       (product: ProductsModel) => product.name === productName,
     );
+
+    if (!dayProduct) {
+      return products.dayProducts[0];
+    }
+
+    return dayProduct;
   }
 
   async getYesterdayProducts() {

@@ -74,6 +74,26 @@ export class ProductsService {
     return [{ model: FeaturesModel, required: false }];
   }
 
+  async recentlyViewed(productsId: number[]) {
+    const products = await this.productModel.findAll({
+      where: {
+        id: {
+          [Op.in]: productsId,
+        },
+      },
+    });
+
+    // Создаем объект Map для быстрого доступа к товарам по id
+    const productMap = new Map();
+    products.forEach((product) => {
+      productMap.set(product.id, product);
+    });
+
+    // Формируем отсортированный массив товаров
+    return productsId
+      .map((id) => productMap.get(id))
+      .filter((product) => product);
+  }
   public async paginateAndFilter(query: IProductsQuery) {
     const limit = Number(query.limit || 10);
     const offset = Number(query.offset || 0);

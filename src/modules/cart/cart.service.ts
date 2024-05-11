@@ -227,7 +227,7 @@ export class CartService {
     }
   }
 
-  async removeAll(userId: number): Promise<CartModel> {
+  async removeAll(userId: number) {
     const exitingShoppingCart = await this.cartModel.findOne({
       where: { user: userId },
     });
@@ -236,6 +236,8 @@ export class CartService {
     exitingShoppingCart.total_price = 0;
     exitingShoppingCart.discount = 0;
 
-    return await exitingShoppingCart.save();
+    const cart = await exitingShoppingCart.save();
+
+    return { cart, message: 'Корзина очищена' };
   }
 }

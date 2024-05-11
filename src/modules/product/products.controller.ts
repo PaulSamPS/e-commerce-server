@@ -106,4 +106,9 @@ export class ProductsController {
   getProductsByCategory(@Param('category') category: string) {
     return this.productService.getProductsByCategory(category);
   }
+
+  @Post('recently-viewed')
+  getRecentlyViewed(@Body() { productsId }: { productsId: number[] }) {
+    return this.productService.recentlyViewed(productsId);
+  }
 }

@@ -3,13 +3,10 @@ import {
   Controller,
   Delete,
   Get,
-  Inject,
   Param,
   Patch,
   Post,
-  Req,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
@@ -84,9 +81,8 @@ export class CartController {
 
   @UseGuards(JwtAuthGuard)
   @Delete()
-  async removeAll(@Req() request): Promise<CartModel> {
-    const accessToken = request.cookies.auth_access;
-    const { user } = await this.getUserFromToken(accessToken);
+  async removeAll(@Cookies('auth_access') token: string) {
+    const { user } = await this.getUserFromToken(token);
 
     return this.cartService.removeAll(user.id);
   }
