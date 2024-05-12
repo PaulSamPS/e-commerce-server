@@ -40,6 +40,7 @@ export class CartService {
           ? (product.oldPrice - product.price) *
             exitingShoppingCart.products[i].count
           : 0;
+      exitingShoppingCart.products[i].discount = product.discount;
     }
 
     exitingShoppingCart.changed('products', true);

@@ -10,6 +10,7 @@ import { Dialect } from 'sequelize';
 import { ReviewModel } from '@/modules/review/review.model';
 import { CartModel } from '@/modules/cart/cart.model';
 import { FavouritesModel } from '@/modules/favourites/favourites.model';
+import { ProfileModel } from '@/modules/profile/profile.model';
 
 /**
  * Интерфейс для описания конфигурации базы данных.
@@ -45,7 +46,14 @@ export class SequelizeConfigService implements SequelizeOptionsFactory {
     // Возвращаем опции конфигурации Sequelize, основанные на конфигурации базы данных
     return {
       ...databaseConfig,
-      models: [UsersModel, CodeModel, ReviewModel, CartModel, FavouritesModel],
+      models: [
+        UsersModel,
+        CodeModel,
+        ReviewModel,
+        CartModel,
+        FavouritesModel,
+        ProfileModel,
+      ],
       autoLoadModels: true,
       define: {
         charset: 'utf8',
