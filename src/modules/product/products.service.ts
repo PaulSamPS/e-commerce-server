@@ -9,6 +9,7 @@ import { FeaturesModel } from '@/modules/features/features.model';
 import { FilesService } from '@/modules/files';
 import { calculateDiscount } from './lib/calculate-discount';
 import { UpdateProductDto } from '@/modules/product/dto/update-product.dto';
+import { RedisService } from '@/modules/redis/redis.service';
 
 @Injectable()
 export class ProductsService {
@@ -16,6 +17,7 @@ export class ProductsService {
     @InjectModel(ProductsModel)
     private productModel: typeof ProductsModel,
     private readonly fileService: FilesService,
+    private readonly redisService: RedisService,
   ) {}
 
   private async processProductImages(
@@ -122,13 +124,29 @@ export class ProductsService {
   }
 
   public async findOneByName(name: string) {
-    const product = await this.productModel.findOne({
-      where: { name },
-      include: this.defaultIncludes(),
-    });
-    if (!product) return null;
-    const reviewCount = await this.getReviewCount(product.id);
-    return { product, reviewCount };
+    const cacheKey = `find_${name}`;
+    const cachedData = await this.redisService.getValue(cacheKey);
+
+    if (!cachedData) {
+      const ttl = 3600;
+
+      const product = await this.productModel.findOne({
+        where: { name },
+        include: this.defaultIncludes(),
+      });
+      if (!product) return null;
+
+      const reviewCount = await this.getReviewCount(product.id);
+
+      await this.redisService.setValue(
+        cacheKey,
+        JSON.stringify({ product, reviewCount }),
+        ttl,
+      );
+      return { product, reviewCount };
+    }
+
+    return JSON.parse(cachedData);
   }
 
   public async findAllByCategory(category: string) {
@@ -224,17 +242,34 @@ export class ProductsService {
   }
 
   public async getTopProducts() {
-    const products = await this.productModel.findAll({
-      where: { rating: { [Op.gt]: 4.7 }, isNew: false },
-      include: this.defaultIncludes(),
-      limit: 10,
-    });
+    const cacheKey = 'top_products';
+    const cachedData = await this.redisService.getValue(cacheKey);
 
-    if (products.length <= 0) {
-      return { message: 'Продукты не найдены', status: HttpStatus.CONFLICT };
+    if (!cachedData) {
+      const ttl = 3600;
+
+      const products = await this.productModel.findAll({
+        where: { rating: { [Op.gt]: 4.7 }, isNew: false },
+        include: this.defaultIncludes(),
+        limit: 10,
+      });
+
+      if (products.length <= 0) {
+        return { message: 'Продукты не найдены', status: HttpStatus.NOT_FOUND };
+      }
+
+      const topProducts = await this.addReviewCountToProducts(products);
+
+      await this.redisService.setValue(
+        cacheKey,
+        JSON.stringify(topProducts),
+        ttl,
+      );
+
+      return topProducts;
     }
 
-    return this.addReviewCountToProducts(products);
+    return JSON.parse(cachedData);
   }
 
   public async getProductsByCategory(category: string) {

@@ -16,6 +16,7 @@ import { CartModule } from '@/modules/cart';
 import { ScheduleModule } from '@nestjs/schedule';
 import { FavouritesModule } from '@/modules/favourites/favourites.module';
 import { ProfileModule } from '@/modules/profile/profile.module';
+import { RedisModule } from '@/modules/redis/redis.module';
 
 /**
  * Модуль приложения, который объединяет все остальные модули и провайдеры.
@@ -53,6 +54,7 @@ import { ProfileModule } from '@/modules/profile/profile.module';
     DayProductsModule,
     FavouritesModule,
     ProfileModule,
+    RedisModule,
     MulterModule.register({ dest: './uploads ' }),
   ],
 })

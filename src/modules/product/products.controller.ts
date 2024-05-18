@@ -85,7 +85,6 @@ export class ProductsController {
   @ApiOkResponse({ type: ProductResponseType })
   @Post('search')
   search(@Body() { productName }: { productName: string }) {
-    console.log(productName, '000');
     return this.productService.searchByName(productName);
   }
 

@@ -4,6 +4,7 @@ import { DayProducts } from '@/modules/day-products/day-products.model';
 import { ProductsService } from '@/modules/product';
 import { ProductsModel } from '@/modules/product/products.model';
 import { ReviewModel } from '@/modules/review/review.model';
+import { RedisService } from '@/modules/redis/redis.service';
 
 @Injectable()
 export class DayProductsService {
@@ -11,6 +12,7 @@ export class DayProductsService {
     @InjectModel(DayProducts)
     private dayProductsModel: typeof DayProducts,
     private readonly productService: ProductsService,
+    private readonly redisService: RedisService,
   ) {}
 
   async setDayProducts() {
@@ -18,7 +20,7 @@ export class DayProductsService {
     const existingDayProducts = await this.dayProductsModel.findOne();
     const product = await this.productService.findAll();
 
-    if (!product) {
+    if (!product || !existingDayProducts) {
       dayProductsModel.dayProducts = [];
       return await dayProductsModel.save();
     }
@@ -82,9 +84,24 @@ export class DayProductsService {
 
     return yesterday;
   }
-  async getDayProducts() {
-    const products = await this.dayProductsModel.findOne();
-    return products.dayProducts;
+
+  async getDayProducts(): Promise<any> {
+    const cacheKey = 'day_products';
+    const cachedData = await this.redisService.getValue(cacheKey);
+
+    if (!cachedData) {
+      const ttl = 3600;
+
+      const products = await this.dayProductsModel.findOne();
+      await this.redisService.setValue(
+        cacheKey,
+        JSON.stringify(products.dayProducts),
+        ttl,
+      );
+      return products.dayProducts;
+    }
+
+    return JSON.parse(cachedData);
   }
 
   async getOneDayProducts(productName: string) {
